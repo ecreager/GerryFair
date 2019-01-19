@@ -1,4 +1,5 @@
 import argparse
+import pdb
 
 import numpy as np
 import pandas as pd
@@ -45,6 +46,10 @@ def clean_dataset(dataset, attributes, centered, age_cutoff):
         raise ValueError('No label column used')
 
     y = df[y_col[0]]
+
+    # handle case where last column is formatted as string not int
+    if y_col[0] == 'income' and ' >50K' in set(y.values):
+         y = pd.Series((y.values == ' >50K').astype(np.int_))
 
     ## Do not use labels in rest of data
     X = df.loc[:, df.columns != y_col[0]]
