@@ -79,7 +79,8 @@ def clean_dataset(dataset, attributes, centered, age_cutoff):
     if(centered):
         X = center(X, sens_cols)
 
-    sens_idx = sorted([X.columns.tolist().index(c) for c in sens_cols])
+    #sens_idx = sorted([X.columns.tolist().index(c) for c in sens_cols])
+    sens_idx = {c: X.columns.tolist().index(c) for c in sens_cols}
 
     # note I return something different from the master branch
     # this fork is FOR PREPROECSSING ONLY and the original functionality may
