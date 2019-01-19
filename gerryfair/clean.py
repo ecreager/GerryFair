@@ -1,4 +1,5 @@
 import argparse
+
 import numpy as np
 import pandas as pd
 
@@ -27,7 +28,11 @@ Attributes: Filename for the attributes of the dataset. The file should have eac
 list should have 0 for an unprotected attribute, 1 for a protected attribute, and 2 for the attribute of the label.
 
 '''
-def clean_dataset(dataset, attributes, centered):
+def clean_dataset(dataset, attributes, centered, age_cutoff):
+    if not 'adult' in dataset and 'adult' in attributes:
+        raise ValueError(
+                'the purpose of this fork is to binarize the adult dataset' \
+                + 'other functionality is not supported')
     df = pd.read_csv(dataset)
     sens_df = pd.read_csv(attributes)
 
@@ -44,7 +49,7 @@ def clean_dataset(dataset, attributes, centered):
     ## Do not use labels in rest of data
     X = df.loc[:, df.columns != y_col[0]]
     X = X.loc[:, X.columns != 'Unnamed: 0']
-    ## Create X_prime, by getting protected attributes
+    ## get protected attributes
     sens_cols = [str(c) for c in sens_df.columns if sens_df[c][0] == 1]
     print('sensitive features: {}'.format(sens_cols))
     sens_dict = {c: 1 if c in sens_cols else 0 for c in df.columns}
@@ -52,22 +57,37 @@ def clean_dataset(dataset, attributes, centered):
     sens_names = [key for key in sens_dict.keys() if sens_dict[key] == 1]
     print('there are {} sensitive features including derivative features'.format(len(sens_names)))
 
-    X_prime = df[sens_names]
+    # binarize age according to cutoff
+    X['age'] = (X['age'] > age_cutoff).astype(np.int_)
 
-    #X = X.reset_index(drop=True)
-    #X_prime = X_prime.reset_index(drop=True)
+    # binarize race by non-white/white; note that a=1 is non-white
+    # "White" happens to be the last race alphabetically
+    sens_name_maj_race = sorted([n for n in sens_names if 'race' in n])[-1]
+    X['race'] = 1 - X[sens_name_maj_race]  # a=1 indicates minority race
+    # get rid of old race attribute names
+    for n in sens_names: 
+        if 'race:' in n:
+            del X[n]
+
+    # sex is already binarized; a=1 is female, a=0 is male
 
     if(centered):
-        X = center(X)
-        X_prime = center(X_prime)
+        X = center(X, sens_cols)
 
-    return X, X_prime, y
+    sens_idx = sorted([X.columns.tolist().index(c) for c in sens_cols])
+
+    # note I return something different from the master branch
+    # this fork is FOR PREPROECSSING ONLY and the original functionality may
+    # be broken...
+    return X, sens_idx, y  
 
 
 
-def center(X):
+def center(X, sens_cols):
     for col in X.columns:
-        X.loc[:, col] = X.loc[:, col]-np.mean(X.loc[:, col])
+        if col not in sens_cols:
+            X.loc[:, col] -= np.mean(X.loc[:, col])
+            X.loc[:, col] /= np.max(X.loc[:, col].abs())
     return X
 
 def one_hot_code(df1, sens_dict):
@@ -76,7 +96,7 @@ def one_hot_code(df1, sens_dict):
         if isinstance(df1[c][0], str):
             column = df1[c]
             df1 = df1.drop(c, 1)
-            unique_values = list(set(column))
+            unique_values = list(sorted(set(column)))
             n = len(unique_values)
             if n > 2:
                 for i in range(n):
