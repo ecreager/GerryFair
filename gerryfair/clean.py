@@ -80,12 +80,13 @@ def clean_dataset(dataset, attributes, centered, age_cutoff):
         X = center(X, sens_cols)
 
     #sens_idx = sorted([X.columns.tolist().index(c) for c in sens_cols])
-    sens_idx = {c: X.columns.tolist().index(c) for c in sens_cols}
+    sens_idx = [X.columns.tolist().index(c) for c in sens_cols]
+    sens_names = sens_cols
 
     # note I return something different from the master branch
     # this fork is FOR PREPROECSSING ONLY and the original functionality may
     # be broken...
-    return X, sens_idx, y  
+    return X, sens_idx, sens_names, y  
 
 
 
@@ -93,7 +94,7 @@ def center(X, sens_cols):
     for col in X.columns:
         if col not in sens_cols:
             X.loc[:, col] -= np.mean(X.loc[:, col])
-            X.loc[:, col] /= np.max(X.loc[:, col].abs())
+            X.loc[:, col] /= X.loc[:, col].std()
     return X
 
 def one_hot_code(df1, sens_dict):
