@@ -35,6 +35,12 @@ np.savez(output_filename,
         cont_names=cont_names,
         cont_idx=cont_idx,
         cat_names=cat_names,
-        cat_idx=cat_idx,
+        #cat_idx=cat_idx,
+        cat_idx0=cat_idx[0],
+        cat_idx1=cat_idx[1],
+        cat_idx2=cat_idx[2],
+        cat_idx3=cat_idx[3],
+        cat_idx4=cat_idx[4],
+        cat_idx5=cat_idx[5],
         age_cutoff=age_cutoff)
 print('done')
