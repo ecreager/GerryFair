@@ -1,3 +1,5 @@
+import pdb
+
 import numpy as np
 
 import gerryfair
@@ -14,8 +16,15 @@ else:
     dataset = "./dataset/adult.csv"
     attributes = "./dataset/adult_protected.csv"
     output_filename = './dataset/adult_binarized'
-X, sens_idx, sens_names, y = gerryfair.clean.clean_dataset(dataset, attributes, centered, age_cutoff)
+X, A, sens_names, categorical_idx, continuous_idx, y \
+        = gerryfair.clean.clean_dataset(dataset, attributes, centered, age_cutoff)
 np.savez(output_filename, 
-        x=X.values, sens_idx=sens_idx, sens_names=sens_names,
-        y=y.values, age_cutoff=age_cutoff)
+        x=X.values,
+        columns=X.columns.tolist(),
+        y=y.values,
+        a=A.values,
+        sens_names=sens_names,
+        categorical_idx=categorical_idx,
+        continuous_idx=continuous_idx,
+        age_cutoff=age_cutoff)
 print('done')
