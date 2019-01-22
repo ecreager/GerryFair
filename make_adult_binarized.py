@@ -1,3 +1,4 @@
+import random
 import pdb
 
 import numpy as np
@@ -18,6 +19,22 @@ else:
     output_filename = './dataset/adult_binarized'
 X, A, sens_names, categorical_idx, continuous_idx, y \
         = gerryfair.clean.clean_dataset(dataset, attributes, centered, age_cutoff)
+
+TRAIN_SPLIT = [0, 30975]
+VALIDATION_SPLIT = [30976, 43959]
+TEST_SPLIT = [43960, 48842]
+shuffled_test_idx = list(range(TEST_SPLIT[0], TEST_SPLIT[1]))
+random.shuffle(shuffled_test_idx)
+
+idx = list(range(TRAIN_SPLIT[0], TRAIN_SPLIT[1]+1)) \
+        + list(range(VALIDATION_SPLIT[0], VALIDATION_SPLIT[1]+1)) \
+        + shuffled_test_idx
+print(len(idx))
+
+X = X.iloc[idx, :]
+A = A.iloc[idx, :]
+y = y.iloc[idx]
+
 cat_names, cat_idx = [], []
 for k, v in categorical_idx.items():
     cat_names.append(k)
